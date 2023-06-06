@@ -104,6 +104,7 @@ public class OAuth2TokenServiceImpl implements OAuth2TokenService {
 
     @Override
     public OAuth2AccessTokenDO checkAccessToken(String accessToken) {
+        /** 查询accessToken 是否过期 **/
         OAuth2AccessTokenDO accessTokenDO = getAccessToken(accessToken);
         if (accessTokenDO == null) {
             throw exception0(GlobalErrorCodeConstants.UNAUTHORIZED.getCode(), "访问令牌不存在");

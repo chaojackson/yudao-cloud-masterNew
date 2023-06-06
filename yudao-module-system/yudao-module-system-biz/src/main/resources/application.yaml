@@ -101,13 +101,24 @@ spring:
           name-server: 127.0.0.1:9876 # RocketMQ Namesrv 地址 ;127.0.0.1:9877
         bindings:
           testSendConsumer-in-0:
-            # RocketMQ Consumer 配置项，对应 RocketMQConsumerProperties 类
+            # RocketMQ Consumer 配置项，对应 RocketMQConsumerProperties 类 https://github.com/alibaba/spring-cloud-alibaba/blob/2022.x/spring-cloud-alibaba-docs/src/main/asciidoc-zh/rocketmq.adoc
             consumer:
               enabled: true # 是否开启消费，默认为 true
               broadcasting: false # 是否使用广播消费，默认为 false 使用集群消费
 #              tags: yunai || yutou # 老版本废除，新版本这样写过滤消息不管用
               subscription: yunai || yutou # Consumer 基于 TAGS 订阅，多个 tag 以 || 分割，默认为空 sql92 的过滤方式见https://github.com/alibaba/spring-cloud-alibaba/blob/2022.x/spring-cloud-alibaba-docs/src/main/asciidoc-zh/rocketmq-new.adoc
               # sql: # 基于 SQL 订阅，默认为空
+          testSend-out-0:
+            producer:
+              group: system_test_send_producer_group # 生产者分组
+              sync: true # 是否同步发送消息，默认为 false 异步。
+              # transactional: true # 是否发送事务消息，默认为 false。 老式写法
+              transactionListener:   ## myTransactionListener 为自定义的事务监听器 模板案例
+                beanName: myTransactionListener
+              producerType: Trans
+              sendMessageTimeout: 3000  # 发送消息的超时时间 毫秒
+              retryTimesWhenSendFailed: 2 # 发送失败的重试次数 默认为2
+              retryTimesWhenSendAsyncFailed: 2 # 异步发送失败的重试次数 默认为2
         default: # 默认 bindings 全局配置
           producer: # RocketMQ Producer 配置项，对应 RocketMQProducerProperties 类
             group: system_producer_group # 生产者分组
