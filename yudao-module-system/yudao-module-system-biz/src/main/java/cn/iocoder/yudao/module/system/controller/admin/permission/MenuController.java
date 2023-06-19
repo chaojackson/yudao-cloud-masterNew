@@ -65,8 +65,9 @@ public class MenuController {
         list = menuService.getMenuFromCache(reqVO);
         if(CollUtil.isEmpty(list)){
             list = menuService.getMenuList(reqVO);
+            list.sort(Comparator.comparing(MenuDO::getSort));
         }
-        list.sort(Comparator.comparing(MenuDO::getSort));
+//        list.sort(Comparator.comparing(MenuDO::getSort));  因为ImmutableList 是一个不可变的集合，所以不能排序
         return success(MenuConvert.INSTANCE.convertList(list));
     }
 

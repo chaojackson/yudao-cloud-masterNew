@@ -91,6 +91,7 @@ public class MenuServiceImpl implements MenuService {
     public synchronized void initLocalCache() {
         // 第一步：查询数据
         List<MenuDO> menuList = menuMapper.selectList();
+        menuList.sort(Comparator.comparing(MenuDO::getSort));
         log.info("[initLocalCache][缓存菜单，数量为:{}]", menuList.size());
 
         // 第二步：构建缓存
