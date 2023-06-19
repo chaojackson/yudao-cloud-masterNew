@@ -2,6 +2,7 @@ package cn.iocoder.yudao.module.system.service.permission;
 
 import cn.iocoder.yudao.module.system.controller.admin.permission.vo.menu.MenuCreateReqVO;
 import cn.iocoder.yudao.module.system.controller.admin.permission.vo.menu.MenuListReqVO;
+import cn.iocoder.yudao.module.system.controller.admin.permission.vo.menu.MenuRespVO;
 import cn.iocoder.yudao.module.system.controller.admin.permission.vo.menu.MenuUpdateReqVO;
 import cn.iocoder.yudao.module.system.dal.dataobject.permission.MenuDO;
 
@@ -105,5 +106,10 @@ public interface MenuService {
      * @return 菜单
      */
     MenuDO getMenu(Long id);
+
+
+    // 从缓存中获取菜单
+
+   public  List<MenuDO> getMenuFromCache(MenuListReqVO reqVO);
 
 }

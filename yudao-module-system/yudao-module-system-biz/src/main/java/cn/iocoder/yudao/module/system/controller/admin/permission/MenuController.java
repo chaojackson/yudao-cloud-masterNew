@@ -1,5 +1,6 @@
 package cn.iocoder.yudao.module.system.controller.admin.permission;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.iocoder.yudao.framework.common.enums.CommonStatusEnum;
 import cn.iocoder.yudao.framework.common.pojo.CommonResult;
 import cn.iocoder.yudao.module.system.controller.admin.permission.vo.menu.*;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
@@ -58,7 +60,12 @@ public class MenuController {
     @Operation(summary = "获取菜单列表", description = "用于【菜单管理】界面")
     @PreAuthorize("@ss.hasPermission('system:menu:query')")
     public CommonResult<List<MenuRespVO>> getMenuList(MenuListReqVO reqVO) {
-        List<MenuDO> list = menuService.getMenuList(reqVO);
+        List<MenuDO> list=new ArrayList<>();
+        // 先从缓存中查询
+        list = menuService.getMenuFromCache(reqVO);
+        if(CollUtil.isEmpty(list)){
+            list = menuService.getMenuList(reqVO);
+        }
         list.sort(Comparator.comparing(MenuDO::getSort));
         return success(MenuConvert.INSTANCE.convertList(list));
     }

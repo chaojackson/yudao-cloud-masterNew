@@ -6,6 +6,7 @@ import cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil;
 import cn.iocoder.yudao.framework.common.util.collection.CollectionUtils;
 import cn.iocoder.yudao.module.system.controller.admin.permission.vo.menu.MenuCreateReqVO;
 import cn.iocoder.yudao.module.system.controller.admin.permission.vo.menu.MenuListReqVO;
+import cn.iocoder.yudao.module.system.controller.admin.permission.vo.menu.MenuRespVO;
 import cn.iocoder.yudao.module.system.controller.admin.permission.vo.menu.MenuUpdateReqVO;
 import cn.iocoder.yudao.module.system.convert.permission.MenuConvert;
 import cn.iocoder.yudao.module.system.dal.dataobject.permission.MenuDO;
@@ -13,7 +14,9 @@ import cn.iocoder.yudao.module.system.dal.mysql.permission.MenuMapper;
 import cn.iocoder.yudao.module.system.enums.permission.MenuTypeEnum;
 import cn.iocoder.yudao.module.system.mq.producer.permission.MenuProducer;
 import cn.iocoder.yudao.module.system.service.tenant.TenantService;
+import com.alibaba.nacos.common.utils.StringUtils;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
@@ -64,6 +67,11 @@ public class MenuServiceImpl implements MenuService {
     @Setter
     private volatile Multimap<String, MenuDO> permissionMenuCache;
 
+
+    @Getter
+    @Setter
+    private volatile List<MenuDO> menuListCache;
+
     @Resource
     private MenuMapper menuMapper;
     @Resource
@@ -86,6 +94,9 @@ public class MenuServiceImpl implements MenuService {
         log.info("[initLocalCache][缓存菜单，数量为:{}]", menuList.size());
 
         // 第二步：构建缓存
+        // ImmutableMap.builder()  是一个方法，用于创建一个不可变的  Map  对象，
+        // 它可以帮助我们构建不可变的键值对集合。在使用该方法时，我们可以通过  put  方法向  Map  中添加键值对，最后通过  build  方法构建一个不可变的  Map  对象
+        ImmutableList.Builder<MenuDO> menuTreeBuilder = ImmutableList.builder();
         ImmutableMap.Builder<Long, MenuDO> menuCacheBuilder = ImmutableMap.builder();
         ImmutableMultimap.Builder<String, MenuDO> permMenuCacheBuilder = ImmutableMultimap.builder();
         menuList.forEach(menuDO -> {
@@ -93,9 +104,11 @@ public class MenuServiceImpl implements MenuService {
             if (StrUtil.isNotEmpty(menuDO.getPermission())) { // 会存在 permission 为 null 的情况，导致 put 报 NPE 异常
                 permMenuCacheBuilder.put(menuDO.getPermission(), menuDO);
             }
+            menuTreeBuilder.add(menuDO);
         });
         menuCache = menuCacheBuilder.build();
         permissionMenuCache = permMenuCacheBuilder.build();
+        menuListCache= menuTreeBuilder.build();
     }
 
     @Override
@@ -283,6 +296,42 @@ public class MenuServiceImpl implements MenuService {
             menu.setIcon("");
             menu.setPath("");
         }
+    }
+
+    @Override
+    public List<MenuDO> getMenuFromCache(MenuListReqVO reqVO){
+        List<MenuDO> list=new ArrayList<>();
+        String name = reqVO.getName();
+        Integer status = reqVO.getStatus();
+
+       //     从menuListCache 集合中模糊查询name和查询status，如果name是空字符串或者null则不查询anme字段，如果status是null则不查询status字段，如果都不为null则查询两个字段,任意一个不为null则查询一个字段
+        if (StringUtils.isEmpty(name) && status == null) {
+
+            list = menuListCache;
+
+        } else if (StringUtils.isEmpty(name) && status != null) {
+            for (MenuDO menuDO : menuListCache) {
+                if (menuDO.getStatus().equals(status)) {
+                    list.add(menuDO);
+                }
+            }
+        } else if (!StringUtils.isEmpty(name) && status == null) {
+            for (MenuDO menuDO : menuListCache) {
+                if (menuDO.getName().contains(name)) {
+                    list.add(menuDO);
+                }
+            }
+        } else {
+            for (MenuDO menuDO : menuListCache) {
+                if (menuDO.getName().contains(name) && menuDO.getStatus().equals(status)) {
+                    list.add(menuDO);
+                }
+            }
+        }
+
+
+
+        return list;
     }
 
 }
