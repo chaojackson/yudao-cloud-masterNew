@@ -199,11 +199,12 @@ public class PermissionServiceImpl implements PermissionService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void assignRoleMenu(Long roleId, Set<Long> menuIds) {
-        // 获得角色拥有菜单编号
+        // 获得角色 原来拥有的菜单编号
         Set<Long> dbMenuIds = convertSet(roleMenuMapper.selectListByRoleId(roleId),
                 RoleMenuDO::getMenuId);
-        // 计算新增和删除的菜单编号
+        // 计算新增和删除的菜单编号   获取增加的菜单id
         Collection<Long> createMenuIds = CollUtil.subtract(menuIds, dbMenuIds);
+        /* 获取 减少的菜单id */
         Collection<Long> deleteMenuIds = CollUtil.subtract(dbMenuIds, menuIds);
         // 执行新增和删除。对于已经授权的菜单，不用做任何处理
         if (!CollectionUtil.isEmpty(createMenuIds)) {
